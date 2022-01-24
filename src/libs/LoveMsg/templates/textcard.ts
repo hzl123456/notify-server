@@ -1,9 +1,4 @@
 /**
- * @description 文本卡片模板 title + description
- * https://open.work.weixin.qq.com/api/doc/90000/90135/90236
- */
-
-/**
  * 卡片类型模板定义
  * 模板内容配置
  * 微信通知 textcard类型的description内容限制512个字节
@@ -12,7 +7,7 @@
 import dayjs from '../../../utils/dayjs'
 
 // 相识的日子
-const start_stamp = '2021-03-26'
+const start_stamp = '2020-10-21'
 
 export const textCardTemplate = (data: TextCardTemplateProps) => {
   const {
@@ -25,7 +20,6 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
     win_speed_day,
     air,
     air_level,
-    // air_tips,
     humidity,
     alarm,
     lunarInfo,
@@ -60,17 +54,12 @@ ${win}：${win_speed_day}
   }
 
   // 最高温度
-  if (+tem1 <= 3) {
+  if (+tem1 <= 10) {
     description += `
-哈喽哈喽~这里是来自崽崽的爱心提醒哦：
+哈喽哈喽~这里是来自胖虎的爱心提醒哦：
 今日最高温度仅为🥶 ${tem1}℃，可冷可冷了~
-鱼崽崽可要注意保暖哦~\n`
+小杜宝可要注意保暖哦~\n`
   }
-
-  //   if (air_tips) {
-  //     description += `
-  // 出行建议：${air_tips}`
-  //   }
 
   if (oneWord) {
     description += `
@@ -88,10 +77,8 @@ ${win}：${win_speed_day}
     textcard: {
       title,
       description,
-      //   url: 'https://api.lovelive.tools/api/SweetNothings',
-      //   url: 'https://v1.jinrishici.com/all.svg',
       url: 'https://api.vvhan.com/api/60s', // 60s看世界
-      btntxt: 'By崽崽',
+      btntxt: 'By胖虎',
     },
   }
 }
