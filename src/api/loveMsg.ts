@@ -6,7 +6,7 @@ import { getTian } from '../utils/http'
  */
 enum LoveMsgURL {
   // 天气
-  weather = 'https://v0.yiketianqi.com/api?unescape=1&version=v61&appid=43656176&appsecret=I42og6Lm',
+  weather = 'https://v0.yiketianqi.com/api?version=v61&appid=63738786&appsecret=g4wUz4JP',
   // 每日简报
   dailyBriefing = 'http://api.tianapi.com/bulletin/index',
   // 今日头条
