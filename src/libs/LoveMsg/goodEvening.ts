@@ -9,15 +9,6 @@ import { newsTemplate } from './templates/news'
 // 获取新闻
 const getNews = async () => {
   try {
-    // 每日简报
-    // const dailyBriefing = await API.getDailyBriefing()
-    // const formateData: TodayHeadlines[] = dailyBriefing.map((n) => ({
-    //   ...n,
-    //   title: n.title,
-    //   description: n.digest,
-    //   picUrl: n.imgsrc,
-    //   ctime: n.mtime,
-    // }))
     // 今日头条
     const todayTopNews = await API.getTianTopNews()
 

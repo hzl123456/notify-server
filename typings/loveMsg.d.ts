@@ -30,6 +30,7 @@ interface IWeatherResponseProps {
   tem2: string
   alarm: IAlarmProps | null
 }
+
 // 预警信息
 interface IAlarmProps {
   /** 暴雨 */
@@ -150,6 +151,12 @@ interface OneWordProps {
   creator: string
 }
 
+// 日期信息
+interface DayInfo {
+  cnweekday: string; // 星期几
+  info: string; // 工作日，节假日
+}
+
 /**
  * 模板
  */
@@ -161,6 +168,7 @@ type TextCardTemplateProps = IWeatherResponseProps & {
 
 // goodEvening
 type TextTemplateProps = {
+  dayInfo: DayInfo | null
   sayLove: SayloveProps | null
   caiHongpi: SayloveProps | null
   oneWord: OneWordProps | null

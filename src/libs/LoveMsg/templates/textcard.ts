@@ -4,7 +4,7 @@
  * 微信通知 textcard类型的description内容限制512个字节
  */
 
-import dayjs from '../../../utils/dayjs'
+import dayjs from 'dayjs'
 
 // 相识的日子
 const start_stamp = '2020-10-21'

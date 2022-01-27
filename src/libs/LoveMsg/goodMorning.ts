@@ -12,6 +12,7 @@ const goodWord = async () => {
   try {
     // 并行请求，优响相应
     const dataSource = await Promise.all([
+      API.getDayInfo(), // 工作日信息
       API.getSaylove(), // 土味情话
       API.getCaihongpi(), // 彩虹屁
       API.getOneWord(), // 一言
@@ -20,12 +21,11 @@ const goodWord = async () => {
       API.getNetEaseCloud(), // 网易云热评
       API.getDayEnglish() // 每日英语
     ])
-
     // 过滤掉异常数据
-    const [sayLove, caiHongpi, oneWord, songLyrics, oneMagazines, netEaseCloud, dayEnglish]
-      = dataSource.map((n: any) => (n?.status === 'fulfilled' ? n?.value : null))
+    const [dayInfo, sayLove, caiHongpi, oneWord, songLyrics, oneMagazines, netEaseCloud, dayEnglish] = dataSource
     // 对象写法
     const data: any = {
+      dayInfo,
       sayLove,
       caiHongpi,
       oneWord,
@@ -36,7 +36,8 @@ const goodWord = async () => {
     }
     const template = textTemplate(data)
     wxNotify(template)
-  } catch (error) {}
+  } catch (error) {
+  }
 }
 
 // 天气信息

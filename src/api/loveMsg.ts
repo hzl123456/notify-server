@@ -33,6 +33,8 @@ enum LoveMsgURL {
   joke = 'http://api.tianapi.com/joke/index',
   // 一言
   oneWord = 'https://v1.hitokoto.cn/?encode=json',
+  // 日期
+  dayInfo = 'http://api.tianapi.com/jiejiari/index',
 }
 
 class API {
@@ -54,10 +56,8 @@ class API {
       // 预警天气
       if (!result.alarm.alarm_type && !result.alarm_content)
         result.alarm = null
-      console.log('天气请求成功==>', city_name)
       return response.data
     } catch (error) {
-      console.log('天气请求失败==>', error)
       return null
     }
   }
@@ -133,6 +133,12 @@ class API {
     } catch (error) {
       return null
     }
+  }
+
+  // 日期信息
+  async getDayInfo(): Promise<DayInfo | null> {
+    const res = await getTian<DayInfo[]>({ url: LoveMsgURL.dayInfo })
+    return res?.[0]
   }
 }
 
