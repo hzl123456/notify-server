@@ -68,17 +68,21 @@ const getNews = async () => {
 // 获今日取故事
 const getStory = async () => {
   const res = await API.getStorybook()
-  const template = {
-    msgtype: 'text',
-    text: {
-      content: `给小杜宝的今日份睡前故事来喽：
+  const text = `给小杜宝的今日份睡前故事来喽：
 🌑🌒🌓🌔🌕🌝😛\n
-『${ res.title }』
-${ res.content }`
-    }
-  }
+『${res.title}』
+${res.content}`
 
-  await wxNotify(template)
+  // 对于太长的文本需要进行截断发送，以 maxCount 为分界线，最大字节是 2048，这里就用 1024 吧
+  const maxCount = 1024
+  for (let i = 0; i < text.length; i += maxCount) {
+    const content = text.substring(i, Math.min(i + maxCount - 1, text.length - 1))
+    const template = {
+      msgtype: 'text',
+      text: { content }
+    }
+    await wxNotify(template)
+  }
 }
 
 // 执行函数
