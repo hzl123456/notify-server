@@ -73,10 +73,10 @@ const getStory = async () => {
 『${res.title}』
 ${res.content}`
 
-  // 对于太长的文本需要进行截断发送，以 maxCount 为分界线，最大字节是 2048，这里就用 1024 吧
-  const maxCount = 1024
+  // 对于太长的文本需要进行截断发送，以 maxCount 为分界线，最大字节是 2048，这里就用 500 吧
+  const maxCount = 500
   for (let i = 0; i < text.length; i += maxCount) {
-    const content = text.substring(i, Math.min(i + maxCount - 1, text.length - 1))
+    const content = text.substring(i, Math.min(i + maxCount, text.length - 1))
     const template = {
       msgtype: 'text',
       text: { content }
