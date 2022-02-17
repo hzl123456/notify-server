@@ -69,7 +69,7 @@ class API {
 
   // 今日头条
   async getTianTopNews() {
-    return await getTian<TodayHeadlines[]>({ url: LoveMsgURL.topNews })
+    return await getTian<TodayHeadlines[]>({ url: LoveMsgURL.topNews, params: { page: 1, num: 16 } })
   }
 
   // 最美宋词
