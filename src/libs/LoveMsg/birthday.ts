@@ -58,6 +58,7 @@ const normalBirthdayList: IBirthday[] = [
   { name: '小杜妈妈', month: 2, day: 15, isLunar: true },
   { name: '小杜爸爸', month: 11, day: 1 },
   { name: '小何', month: 5, day: 22 },
+  { name: '小何爸爸', month: 1, day: 22 },
 ]
 
 const recentBirthdayList: IBirthday[] = [
