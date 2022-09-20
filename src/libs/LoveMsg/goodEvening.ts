@@ -7,7 +7,7 @@ import { wxNotify } from '../WxNotify'
 import { newsTemplate } from './templates/news'
 
 // 获取新闻
-const getNews = async () => {
+const getNews = async() => {
   try {
     // 今日头条
     const result = await API.getTianTopNews()
@@ -19,12 +19,13 @@ const getNews = async () => {
       const template = newsTemplate(result.slice(start, end))
       await wxNotify(template)
     }
-  } catch (e) {
+  }
+  catch (e) {
   }
 }
 
 // 获今日取故事
-const getStory = async () => {
+const getStory = async() => {
   const res = await API.getStorybook()
   const text = `给小杜宝的今日份睡前故事来喽：
 🌑🌒🌓🌔🌕🌝😛\n
@@ -37,14 +38,14 @@ ${res.content}`
     const content = text.substring(i, Math.min(i + maxCount, text.length - 1))
     const template = {
       msgtype: 'text',
-      text: { content }
+      text: { content },
     }
     await wxNotify(template)
   }
 }
 
 // 执行函数
-export const goodEvening = async () => {
+export const goodEvening = async() => {
   await getStory()
   await getNews()
 }

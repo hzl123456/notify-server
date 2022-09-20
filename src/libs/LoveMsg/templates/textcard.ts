@@ -1,9 +1,8 @@
 /**
  * 卡片类型模板定义
  * 模板内容配置
- * 微信通知 textcard类型的description内容限制512个字节
+ * 微信通知 textcard 类型的 description 内容限制512个字节
  */
-
 import dayjs from 'dayjs'
 
 // 相识的日子

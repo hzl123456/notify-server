@@ -57,7 +57,8 @@ class API {
       if (!result.alarm.alarm_type && !result.alarm_content)
         result.alarm = null
       return response.data
-    } catch (error) {
+    }
+    catch (error) {
       return null
     }
   }
@@ -130,7 +131,8 @@ class API {
     try {
       const response = await axios(LoveMsgURL.oneWord, { timeout: 30000 })
       return response.data
-    } catch (error) {
+    }
+    catch (error) {
       return null
     }
   }

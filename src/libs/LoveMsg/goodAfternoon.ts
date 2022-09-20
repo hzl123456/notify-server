@@ -17,12 +17,12 @@ export const goodAfternoon = async() => {
 ${res.map(n => `『${n.title}』${n.content}`).join('\n\n')}`
 
   // 对于太长的文本需要进行截断发送，以 maxCount 为分界线，最大字节是 2048，这里就用 800 吧
-  const maxCount = 800;
+  const maxCount = 800
   for (let i = 0; i < text.length; i += maxCount) {
     const content = text.substring(i, Math.min(i + maxCount, text.length - 1))
     const template = {
       msgtype: 'text',
-      text: { content }
+      text: { content },
     }
     await wxNotify(template)
   }

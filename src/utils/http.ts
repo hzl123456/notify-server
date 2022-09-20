@@ -1,5 +1,6 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import axios from 'axios'
+import type { AxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosResponse } from 'axios'
+
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -7,7 +8,7 @@ const { TIAN_API_KEY } = process.env
 
 const instance = axios.create({
   withCredentials: true,
-  timeout: 30000
+  timeout: 30000,
 })
 
 instance.interceptors.response.use(
@@ -16,22 +17,24 @@ instance.interceptors.response.use(
     if (res.code === 200)
       return res.newslist
     return undefined
-  }
+  },
 )
 
 const request = <T = any>(config: AxiosRequestConfig, options?: AxiosRequestConfig): Promise<T> => {
   if (typeof config === 'string') {
     if (!options) {
       return instance.request<T, T>({
-        url: config
-      })
-    } else {
-      return instance.request<T, T>({
         url: config,
-        ...options
       })
     }
-  } else {
+    else {
+      return instance.request<T, T>({
+        url: config,
+        ...options,
+      })
+    }
+  }
+  else {
     return instance.request<T, T>(config)
   }
 }
@@ -42,17 +45,17 @@ export function get<T = any>(config: AxiosRequestConfig, options?: AxiosRequestC
 
 export function getTian<T = any>(
   config: AxiosRequestConfig,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): Promise<T> {
   return request(
     { ...config, params: { ...(config.params || {}), key: TIAN_API_KEY }, method: 'GET' },
-    options
+    options,
   )
 }
 
 export function post<T = any>(
   config: AxiosRequestConfig,
-  options?: AxiosRequestConfig
+  options?: AxiosRequestConfig,
 ): Promise<T> {
   return request({ ...config, method: 'POST' }, options)
 }

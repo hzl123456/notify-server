@@ -8,7 +8,7 @@ import { textTemplate } from './templates/text'
 import { textCardTemplate } from './templates/textcard'
 
 // 美丽短句
-const goodWord = async () => {
+const goodWord = async() => {
   try {
     // 并行请求，优响相应
     const dataSource = await Promise.all([
@@ -19,7 +19,7 @@ const goodWord = async () => {
       API.getSongLyrics(), // 最美宋词
       API.getOneMagazines(), // one杂志
       API.getNetEaseCloud(), // 网易云热评
-      API.getDayEnglish() // 每日英语
+      API.getDayEnglish(), // 每日英语
     ])
     // 过滤掉异常数据
     const [dayInfo, sayLove, caiHongpi, oneWord, songLyrics, oneMagazines, netEaseCloud, dayEnglish] = dataSource
@@ -32,16 +32,17 @@ const goodWord = async () => {
       songLyrics,
       oneMagazines,
       netEaseCloud,
-      dayEnglish
+      dayEnglish,
     }
     const template = textTemplate(data)
     wxNotify(template)
-  } catch (error) {
+  }
+  catch (error) {
   }
 }
 
 // 天气信息
-const weatherInfo = async () => {
+const weatherInfo = async() => {
   const weather = await API.getWeather('杭州')
   if (weather) {
     const lunarInfo = await API.getLunarDate(weather.date)
@@ -53,7 +54,7 @@ const weatherInfo = async () => {
 }
 
 // goodMorning
-export const goodMorning = async () => {
+export const goodMorning = async() => {
   await weatherInfo()
   await goodWord()
 }
