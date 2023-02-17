@@ -8,6 +8,9 @@ import dayjs from 'dayjs'
 // 相识的日子
 const start_stamp = '2020-10-21'
 
+// 结婚的日子
+const start_marry_stamp = '2023-02-16'
+
 export const textCardTemplate = (data: TextCardTemplateProps) => {
   const {
     city,
@@ -29,6 +32,9 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
   // 今日、恋爱天数
   const today = `${date.replace('-', '年').replace('-', '月')}日`
   const dateLength = dayjs(date).diff(start_stamp, 'day')
+
+  // 结婚天数
+  const marryDateLength = dayjs(date).diff(start_marry_stamp, 'day')
 
   // 公历节日、农历节日和二十四节气
   const { festival, lunar_festival, jieqi, lubarmonth, lunarday } = lunarInfo
@@ -69,7 +75,7 @@ ${win}：${win_speed_day}
   description += `
   [ 点我有惊喜 ] ❤️ 🧡 💛 💚 💖`
 
-  const title = `这是我们相识的第 ${dateLength} 天`
+  const title = `这是我们相识的第 ${dateLength} 天，结婚的第 ${marryDateLength} 天`
 
   return {
     msgtype: 'textcard',
