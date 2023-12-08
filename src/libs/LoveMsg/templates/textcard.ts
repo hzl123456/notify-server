@@ -14,20 +14,16 @@ const start_marry_stamp = '2023-02-16'
 export const textCardTemplate = (data: TextCardTemplateProps) => {
   const {
     city,
-    date,
-    wea,
-    tem1,
-    tem2,
-    win,
-    win_speed_day,
-    air,
-    air_level,
+    weather,
+    temperature,
+    winddirection,
+    windpower,
     humidity,
-    alarm,
     lunarInfo,
-    week,
     oneWord,
   } = data
+
+  const date = dayjs().format('YYYY-MM-DD')
 
   // 今日、恋爱天数
   const today = `${date.replace('-', '年').replace('-', '月')}日`
@@ -43,26 +39,19 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
   const jieqi_info = jieqi ? `| ${jieqi}` : ''
 
   // 拼接内容
-  let description = `${city} | ${today} | ${week} ${festival_info}
+  let description = `${city} | ${today} | ${festival_info}
 农历 | ${lubarmonth}${lunarday} ${lunar_festival_info} ${jieqi_info}\n
 今日天气状况：
-天气：${wea}
-${win}：${win_speed_day}
-温度：${tem2}℃ ~ ${tem1}℃
-湿度：${humidity}
-空气：${air_level} | ${air}\n`
-
-  // 添加预警天气
-  if (alarm) {
-    description += `
-有预警信息哦：${alarm.alarm_type} | ${alarm.alarm_level}预警\n`
-  }
+天气：${weather}
+风速：${winddirection} ~ ${windpower}
+温度：${temperature}℃（实时）
+湿度：${humidity}\n`
 
   // 最高温度
-  if (+tem1 <= 10) {
+  if (Number(temperature) <= 10) {
     description += `
 哈喽哈喽~这里是来自胖虎的爱心提醒哦：
-今日最高温度仅为🥶 ${tem1}℃，可冷可冷了~
+当前实时温度仅为🥶 ${temperature}℃，可冷可冷了~
 小杜宝可要注意保暖哦~\n`
   }
 

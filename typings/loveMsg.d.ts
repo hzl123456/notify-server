@@ -1,34 +1,16 @@
 // 定义天气返回值类型
 interface IWeatherResponseProps {
-  /** 2021-12-18 */
-  date: string
-  /** 星期六 */
-  week: string
-  /** 蚌埠 */
+  province: string
   city: string
-  /** 晴 */
-  wea: string
-  /** 西南风 */
-  win: string
-  /** 3-4级 */
-  win_speed_day: string
-  /** 湿度：35% */
+  adcode: string
+  weather: string
+  temperature: string
+  winddirection: string
+  windpower: string
   humidity: string
-  /** 空气：67 */
-  air: string
-  /** 空气质量：良 */
-  air_level: string
-  /** 活动建议 */
-  air_tips: string
-  /** pm2.5：21 */
-  air_pm25: string
-  /** 当前温度 4 */
-  tem: string
-  /** 最高温度 8 */
-  tem1: string
-  /** 最低温度 -2 */
-  tem2: string
-  alarm: IAlarmProps | null
+  reporttime: string
+  temperature_float: string
+  humidity_float: string
 }
 
 // 预警信息
@@ -153,8 +135,8 @@ interface OneWordProps {
 
 // 日期信息
 interface DayInfo {
-  cnweekday: string; // 星期几
-  info: string; // 工作日，节假日
+  cnweekday: string // 星期几
+  info: string // 工作日，节假日
 }
 
 /**

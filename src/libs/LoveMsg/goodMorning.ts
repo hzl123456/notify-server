@@ -2,6 +2,7 @@
  * @name goodMorning
  * @description 说早安
  */
+import dayjs from 'dayjs'
 import API from '../../api/loveMsg'
 import { wxNotify } from '../WxNotify'
 import { textTemplate } from './templates/text'
@@ -38,18 +39,22 @@ const goodWord = async() => {
     wxNotify(template)
   }
   catch (error) {
+    console.log('goodWord:错误！', error)
   }
 }
 
 // 天气信息
 const weatherInfo = async() => {
-  const weather = await API.getWeather('杭州')
-  if (weather) {
-    const lunarInfo = await API.getLunarDate(weather.date)
+  try {
+    const weather = await API.getWeather()
+    const lunarInfo = await API.getLunarDate(dayjs().format('YYYY-MM-DD'))
     const oneWord = await API.getOneWord()
     const template = textCardTemplate({ ...weather, lunarInfo, oneWord })
     // 发送消息
     await wxNotify(template)
+  }
+  catch (error) {
+    console.log('weatherInfo:错误！', error)
   }
 }
 
