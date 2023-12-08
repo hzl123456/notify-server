@@ -39,11 +39,11 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
   const jieqi_info = jieqi ? `| ${jieqi}` : ''
 
   // 拼接内容
-  let description = `${city} | ${today} | ${festival_info}
+  let description = `${city} | ${today} ${festival_info}
 农历 | ${lubarmonth}${lunarday} ${lunar_festival_info} ${jieqi_info}\n
 今日天气状况：
 天气：${weather}
-风速：${winddirection} ~ ${windpower}
+风速：${winddirection} ${windpower}
 温度：${temperature}℃（实时）
 湿度：${humidity}\n`
 
