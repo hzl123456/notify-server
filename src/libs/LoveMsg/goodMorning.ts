@@ -47,7 +47,7 @@ const goodWord = async() => {
 const weatherInfo = async() => {
   try {
     const weather = await API.getWeather()
-    const lunarInfo = await API.getLunarDate(dayjs().format('YYYY-MM-DD'))
+    const lunarInfo = await API.getLunarDate(dayjs(weather.reporttime).format('YYYY-MM-DD'))
     const oneWord = await API.getOneWord()
     const template = textCardTemplate({ ...weather, lunarInfo, oneWord })
     // 发送消息

@@ -11,6 +11,10 @@ const start_stamp = '2020-10-21'
 // 结婚的日子
 const start_marry_stamp = '2023-02-16'
 
+const getWeekday = (day: number) => {
+  return `星期${['天', '一', '二', '三', '四', '五', '六'][day]}`
+}
+
 export const textCardTemplate = (data: TextCardTemplateProps) => {
   const {
     city,
@@ -21,16 +25,19 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
     humidity,
     lunarInfo,
     oneWord,
+    reporttime,
   } = data
 
-  const date = dayjs().format('YYYY-MM-DD')
+  const date = dayjs(reporttime)
 
-  // 今日、恋爱天数
-  const today = `${date.replace('-', '年').replace('-', '月')}日`
-  const dateLength = dayjs(date).diff(start_stamp, 'day') + 1
+  // 今日
+  const today = date.format('YYYY年-MM月-DD日')
+
+  // 恋爱天数
+  const dateLength = date.diff(start_stamp, 'day') + 1
 
   // 结婚天数
-  const marryDateLength = dayjs(date).diff(start_marry_stamp, 'day') + 1
+  const marryDateLength = date.diff(start_marry_stamp, 'day') + 1
 
   // 公历节日、农历节日和二十四节气
   const { festival, lunar_festival, jieqi, lubarmonth, lunarday } = lunarInfo
@@ -39,13 +46,13 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
   const jieqi_info = jieqi ? `| ${jieqi}` : ''
 
   // 拼接内容
-  let description = `${city} | ${today} ${festival_info}
+  let description = `${city} | ${today} | ${getWeekday(date.day())} ${festival_info}
 农历 | ${lubarmonth}${lunarday} ${lunar_festival_info} ${jieqi_info}\n
 今日天气状况：
 天气：${weather}
 风速：${winddirection} ${windpower}
 温度：${temperature}℃（实时）
-湿度：${humidity}\n`
+湿度：${humidity}%\n`
 
   // 最高温度
   if (Number(temperature) <= 10) {
