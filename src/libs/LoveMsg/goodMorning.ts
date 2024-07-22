@@ -36,7 +36,7 @@ const goodWord = async() => {
       dayEnglish,
     }
     const template = textTemplate(data)
-    wxNotify(template)
+    await wxNotify(template)
   }
   catch (error) {
     console.log('goodWord:错误！', error)

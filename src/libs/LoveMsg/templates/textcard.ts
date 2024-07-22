@@ -78,7 +78,7 @@ export const textCardTemplate = (data: TextCardTemplateProps) => {
     textcard: {
       title,
       description,
-      url: 'https://api.vvhan.com/api/60s', // 60s看世界
+      url: 'https://api.vvhan.com/api/bing',
       btntxt: 'By胖虎',
     },
   }

@@ -15,7 +15,7 @@ instance.interceptors.response.use(
   (response) => {
     const res = response.data
     if (res.code === 200)
-      return res.newslist
+      return res.result
     return undefined
   },
 )
