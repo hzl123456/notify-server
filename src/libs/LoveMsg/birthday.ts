@@ -65,7 +65,6 @@ const recentBirthdayList: IBirthday[] = [
   ...normalBirthdayList,
   { name: '糖糖', month: 9, day: 12 },
   { name: '小凡', month: 8, day: 8 },
-  { name: '糊糊', month: 8, day: 25 },
 ]
 
 interface IBirthday{
