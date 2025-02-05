@@ -44,7 +44,6 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@types/node": "^17.0.0",
     "bumpp": "^7.1.1",
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
