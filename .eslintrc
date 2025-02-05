@@ -1,5 +1,5 @@
 {
-  "extends": ["prettier","@antfu"],
+  "extends": ["prettier"],
   "rules": {
     "no-console": "warn"
   }
