@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { getTian } from '../utils/http'
-const { TIAN_API_KEY_NEW } = process.env
 
 /**
  * 给女朋友发送内容的相关接口
@@ -61,7 +60,11 @@ class API {
   async getTianTopNews() {
     const res = await getTian<{ newslist: TodayHeadlines[] }>({
       url: LoveMsgURL.topNews,
-      params: { page: 1, num: 8, key: TIAN_API_KEY_NEW }
+      params: {
+        key: '79e9f058ea0cca237a22b2d18c6c8b52',
+        page: 1,
+        num: 8
+      }
     })
     return res.newslist
   }
