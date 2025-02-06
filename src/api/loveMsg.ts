@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getTian } from '../utils/http'
+const { TIAN_API_KEY_NEW } = process.env
 
 /**
  * 给女朋友发送内容的相关接口
@@ -9,8 +10,8 @@ enum LoveMsgURL {
   weather = 'https://restapi.amap.com/v3/weather/weatherInfo',
   // 一言
   oneWord = 'https://v1.hitokoto.cn/?encode=json',
-  // 今日头条
-  topNews = 'https://apis.tianapi.com/topnews/index',
+  // 国内新闻
+  topNews = 'https://apis.tianapi.com/guonei/index',
   // 最美宋词
   songLyrics = 'https://apis.tianapi.com/zmsc/index',
   // 每日一句美好英语
@@ -50,16 +51,19 @@ class API {
       url: LoveMsgURL.weather,
       params: {
         key: 'ce468efe250c3cc7dc6f8e742a79ce3c',
-        city: '330100', // 杭州
-      },
+        city: '330100' // 杭州
+      }
     })
     return response.data.lives[0]
   }
 
   // 今日头条
   async getTianTopNews() {
-    const res = await getTian<{list: TodayHeadlines[]}>({ url: LoveMsgURL.topNews, params: { page: 1, num: 8 } })
-    return res.list
+    const res = await getTian<{ newslist: TodayHeadlines[] }>({
+      url: LoveMsgURL.topNews,
+      params: { page: 1, num: 8, key: TIAN_API_KEY_NEW }
+    })
+    return res.newslist
   }
 
   // 最美宋词
@@ -79,7 +83,7 @@ class API {
 
   // 故事大全
   async getStorybook() {
-    const res = await getTian<{list: StorybookProps[]}>({ url: LoveMsgURL.storybook })
+    const res = await getTian<{ list: StorybookProps[] }>({ url: LoveMsgURL.storybook })
     return res.list[0]
   }
 
@@ -105,13 +109,13 @@ class API {
 
   // 雷人笑话
   async getJoke(num = 6) {
-    const res = await getTian<{list: JokeProps[]}>({ url: LoveMsgURL.joke, params: { num } })
+    const res = await getTian<{ list: JokeProps[] }>({ url: LoveMsgURL.joke, params: { num } })
     return res.list
   }
 
   // 日期信息
   async getDayInfo(): Promise<DayInfo | null> {
-    const res = await getTian<{list: DayInfo[]}>({ url: LoveMsgURL.dayInfo })
+    const res = await getTian<{ list: DayInfo[] }>({ url: LoveMsgURL.dayInfo })
     return res.list[0]
   }
 
@@ -120,8 +124,7 @@ class API {
     try {
       const response = await axios(LoveMsgURL.oneWord, { timeout: 30000 })
       return response.data
-    }
-    catch (error) {
+    } catch (error) {
       return null
     }
   }

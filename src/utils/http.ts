@@ -48,7 +48,7 @@ export function getTian<T = any>(
   options?: AxiosRequestConfig,
 ): Promise<T> {
   return request(
-    { ...config, params: { ...(config.params || {}), key: TIAN_API_KEY }, method: 'GET' },
+    { ...config, params: {  key: TIAN_API_KEY,...(config.params || {}), }, method: 'GET' },
     options,
   )
 }
