@@ -6,26 +6,16 @@ import { goodMorning } from './goodMorning'
 import { goodAfternoon } from './goodAfternoon'
 import { goodEvening } from './goodEvening'
 import { birthday } from './birthday'
+import { isMessageType } from '../../utils/schedule'
 
 dotenv.config()
 
-const { MESSAGE_TYPE } = process.env
-
-export default function main() {
-  if (MESSAGE_TYPE === 'goodAfternoon') {
-    // 午安
-    goodAfternoon()
+export default async function main(
+  handlers = { goodMorning, goodAfternoon, goodEvening, birthday }
+) {
+  const MESSAGE_TYPE = process.env.MESSAGE_TYPE
+  if (!isMessageType(MESSAGE_TYPE)) {
+    throw new Error('MESSAGE_TYPE 必须是 goodMorning、goodAfternoon、goodEvening 或 birthday')
   }
-  else if (MESSAGE_TYPE === 'goodEvening') {
-    // 晚安
-    goodEvening()
-  }
-  else if (MESSAGE_TYPE === 'goodMorning') {
-    // 早安
-    goodMorning()
-  }
-  else {
-    // 生日助手
-    birthday()
-  }
+  await handlers[MESSAGE_TYPE]()
 }

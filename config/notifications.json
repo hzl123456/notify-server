@@ -1,0 +1,10 @@
+{
+  "timeZone": "Asia/Shanghai",
+  "sendWindowMinutes": 30,
+  "messages": {
+    "goodMorning": { "hour": 7, "minute": 45 },
+    "goodAfternoon": { "hour": 10, "minute": 58 },
+    "birthday": { "hour": 14, "minute": 58 },
+    "goodEvening": { "hour": 21, "minute": 58 }
+  }
+}

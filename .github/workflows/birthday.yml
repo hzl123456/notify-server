@@ -1,37 +1,35 @@
 name: Birthday notify for you
 on:
   workflow_dispatch:
-    branches:
-      - master
-  schedule:
-    # `分 时 天 月 周` 时按照标准时间 北京时间=标准时间+8 16表示北京时间早上0点
-    # 下午2点58分
-    - cron: '58 6 * * *'
+  # 自动发送统一由 notifications.yml 检查时间和去重。
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TZ: Asia/Shanghai
 
     steps:
       # 1. checkout 仓库
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # 2. 设置pnpm包管理器
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.0.1
+        uses: pnpm/action-setup@v4
         with:
-          version: 7
+          version: 10
 
       # 3. 设置Node环境
-      - name: Set node version to 16
-        uses: actions/setup-node@v3
+      - name: Set node version to 22
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 22
           cache: 'pnpm' # 配置缓存，优化安装性能
 
       # 4. 安装依赖
       - name: Install
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       # 5. 运行脚本
       - name: 运行脚本

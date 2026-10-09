@@ -1,0 +1,84 @@
+name: Scheduled notifications
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 全天每 10 分钟检查一次；延迟的触发也只处理当前北京时间应发送的消息。
+    # 避开整点，并在 07:45、10:58、14:58、21:58 增加一次检查。
+    - cron: '3,13,23,33,43,53 * * * *'
+    - cron: '45 23 * * *'
+    - cron: '58 2,6,13 * * *'
+
+permissions:
+  contents: read
+  actions: read
+
+# 串行执行，保证检查发送记录和发送消息之间不会有另一个任务插入。
+concurrency:
+  group: scheduled-notifications
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TZ: Asia/Shanghai
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check current Beijing time
+        id: schedule
+        run: node scripts/check-schedule.cjs
+
+      - name: Check today's delivery record
+        if: steps.schedule.outputs.message_type != ''
+        id: delivery
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTIFICATION_ID: ${{ steps.schedule.outputs.notification_id }}
+        run: |
+          delivered=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=${NOTIFICATION_ID}" --jq '.artifacts | any(.expired == false)')
+          echo "delivered=$delivered" >> "$GITHUB_OUTPUT"
+
+      - name: Install pnpm
+        if: steps.delivery.outputs.delivered == 'false'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        if: steps.delivery.outputs.delivered == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.delivery.outputs.delivered == 'false'
+        run: pnpm install --frozen-lockfile
+
+      - name: Send notification
+        if: steps.delivery.outputs.delivered == 'false'
+        id: send
+        run: pnpm start
+        env:
+          WX_COMPANY_ID: ${{ secrets.WX_COMPANY_ID }}
+          WX_APP_ID: ${{ secrets.WX_APP_ID }}
+          WX_APP_SECRET: ${{ secrets.WX_APP_SECRET }}
+          TIAN_API_KEY: ${{ secrets.TIAN_API_KEY }}
+          MESSAGE_TYPE: ${{ steps.schedule.outputs.message_type }}
+          ENFORCE_SEND_WINDOW: 'true'
+          NOTIFICATION_MARKER: .notification-sent
+
+      # 即使后续内容请求失败，已发送的消息也要记录，避免下一次检查重复发送。
+      - name: Save today's delivery record
+        if: always() && steps.send.outputs.sent == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.schedule.outputs.notification_id }}
+          path: .notification-sent
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7

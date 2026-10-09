@@ -9,7 +9,8 @@
     "strictNullChecks": true,
     "resolveJsonModule": true,
     "skipDefaultLibCheck": true,
-    "typeRoots": ["typings"]
+    "skipLibCheck": true,
+    "typeRoots": ["typings", "node_modules/@types"]
   },
   "include": ["src", "typings", "test"],
   "exclude": ["node_modules", "dist"]

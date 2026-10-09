@@ -11,13 +11,13 @@ export async function getToken({ id, secret }: IReqToken): Promise<string> {
     const response = await axios({
       url: `${BASE_URL}/cgi-bin/gettoken?corpid=${id}&corpsecret=${secret}`,
       method: 'GET',
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },
     })
     return response.data.access_token
-  }
-  catch (error) {
+  } catch (error) {
     return ''
   }
 }
