@@ -1,16 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import {
-  canSendNow,
-  isWithinSendWindow,
-  MessageType,
-  notificationSchedule,
-} from '../src/utils/schedule'
+import { canSendNow, hasReachedSendTime, MessageType } from '../src/utils/schedule'
+import { getNotification, getNotifications } from '../scripts/check-schedule.cjs'
 
-const { checkSchedule, getNotifications } = require('../scripts/check-schedule.cjs')
 const { waitUntil } = require('../scripts/wait-until.cjs')
 
-describe('Beijing notification windows', () => {
-  it('sends each message at the configured Beijing time', () => {
+describe('Beijing notification dates and times', () => {
+  it('does not send early and permits each type at or after its scheduled time', () => {
     const cases: [MessageType, string][] = [
       ['goodMorning', '2026-10-08T23:45:00Z'],
       ['goodAfternoon', '2026-10-09T02:58:00Z'],
@@ -18,77 +13,71 @@ describe('Beijing notification windows', () => {
       ['goodEvening', '2026-10-09T13:58:00Z'],
     ]
     for (const [type, timestamp] of cases) {
-      const delay = notificationSchedule[type].maxDelayMinutes * 60000
-      expect(isWithinSendWindow(type, new Date(timestamp))).toEqual(true)
-      expect(checkSchedule(new Date(timestamp))).toEqual({
+      const target = Date.parse(timestamp)
+      expect(getNotification(type, new Date(timestamp))).toEqual({
         type,
         date: '2026-10-09',
         id: `notification-2026-10-09-${type}`,
+        scheduledAt: new Date(target).toISOString(),
       })
-      expect(isWithinSendWindow(type, new Date(Date.parse(timestamp) - 1000))).toEqual(false)
-      expect(isWithinSendWindow(type, new Date(Date.parse(timestamp) + delay - 1))).toEqual(true)
-      expect(isWithinSendWindow(type, new Date(Date.parse(timestamp) + delay))).toEqual(false)
-      expect(checkSchedule(new Date(Date.parse(timestamp) + delay))).toEqual(null)
+      expect(hasReachedSendTime(type, new Date(target - 1), '2026-10-09')).toEqual(false)
+      expect(hasReachedSendTime(type, new Date(target), '2026-10-09')).toEqual(true)
+      expect(hasReachedSendTime(type, new Date(target + 12 * 3600000), '2026-10-09')).toEqual(true)
     }
   })
 
-  it('does not send the delayed 03:36 story or other messages hours late', () => {
-    expect(isWithinSendWindow('goodEvening', new Date('2026-10-08T19:36:00Z'))).toEqual(false)
-    expect(checkSchedule(new Date('2026-10-08T19:36:00Z'))).toEqual(null)
-    expect(isWithinSendWindow('goodEvening', new Date('2026-10-08T16:00:00Z'))).toEqual(false)
-    expect(isWithinSendWindow('goodMorning', new Date('2026-10-08T02:56:00Z'))).toEqual(false)
-    expect(isWithinSendWindow('goodAfternoon', new Date('2026-10-08T10:06:00Z'))).toEqual(false)
-    expect(isWithinSendWindow('birthday', new Date('2026-10-08T14:06:00Z'))).toEqual(false)
+  it('allows noon and birthday messages in the evening, and yesterday’s story at 03:36', () => {
+    const evening = new Date('2026-10-11T15:30:00Z')
+    expect(hasReachedSendTime('goodAfternoon', evening, '2026-10-11')).toEqual(true)
+    expect(hasReachedSendTime('birthday', evening, '2026-10-11')).toEqual(true)
+    expect(hasReachedSendTime('goodEvening', evening, '2026-10-11')).toEqual(true)
+    const late = new Date('2026-10-11T19:36:00Z')
+    const story = getNotifications(late).find((n) => n.type === 'goodEvening')
+    expect(story?.date).toEqual('2026-10-11')
+    expect(hasReachedSendTime('goodEvening', late, story?.date)).toEqual(true)
   })
 
-  it('uses the Beijing date to identify each daily delivery', () => {
-    const first = checkSchedule(new Date('2026-10-08T23:45:00Z'))
-    const repeat = checkSchedule(new Date('2026-10-08T23:53:00Z'))
-    const nextDay = checkSchedule(new Date('2026-10-09T23:45:00Z'))
-    expect(first.id).toEqual(repeat.id)
-    expect(first.id).toEqual('notification-2026-10-09-goodMorning')
-    expect(nextDay.id).toEqual('notification-2026-10-10-goodMorning')
+  it('keeps deduplication keys tied to the planned Beijing date across midnight', () => {
+    const before = getNotifications(new Date('2026-10-11T15:30:00Z')).find(
+      (n) => n.type === 'goodEvening'
+    )
+    const after = getNotifications(new Date('2026-10-11T19:36:00Z')).find(
+      (n) => n.type === 'goodEvening'
+    )
+    expect(before?.id).toEqual('notification-2026-10-11-goodEvening')
+    expect(after?.id).toEqual(before?.id)
+    expect(getNotification('goodEvening', new Date('2026-10-12T13:58:00Z')).id).toEqual(
+      'notification-2026-10-12-goodEvening'
+    )
   })
 
-  it('enforces automatic sends and leaves manual sends available', () => {
+  it('checks automatic send times while keeping manual sends available', () => {
+    const names = [
+      'MESSAGE_TYPE',
+      'GITHUB_EVENT_NAME',
+      'ENFORCE_SCHEDULE',
+      'ENFORCE_SEND_WINDOW',
+      'NOTIFICATION_DATE',
+    ]
     const previous = { ...process.env }
-    const late = new Date('2026-10-08T19:36:00Z')
+    const late = new Date('2026-10-11T19:36:00Z')
     try {
+      delete process.env.ENFORCE_SCHEDULE
       delete process.env.ENFORCE_SEND_WINDOW
-      delete process.env.NOTIFICATION_DATE
       process.env.MESSAGE_TYPE = 'goodEvening'
+      process.env.NOTIFICATION_DATE = '2026-10-11'
       process.env.GITHUB_EVENT_NAME = 'schedule'
+      expect(canSendNow(late)).toEqual(true)
+      process.env.NOTIFICATION_DATE = '2026-10-12'
       expect(canSendNow(late)).toEqual(false)
       process.env.GITHUB_EVENT_NAME = 'workflow_dispatch'
       expect(canSendNow(late)).toEqual(true)
-      process.env.ENFORCE_SEND_WINDOW = 'true'
+      process.env.ENFORCE_SCHEDULE = 'true'
       expect(canSendNow(late)).toEqual(false)
       process.env.MESSAGE_TYPE = 'unknown'
-      expect(canSendNow(new Date('2026-10-09T13:58:00Z'))).toEqual(false)
+      expect(canSendNow(late)).toEqual(false)
     } finally {
-      for (const name of [
-        'MESSAGE_TYPE',
-        'GITHUB_EVENT_NAME',
-        'ENFORCE_SEND_WINDOW',
-        'NOTIFICATION_DATE',
-      ]) {
-        if (previous[name] === undefined) delete process.env[name]
-        else process.env[name] = previous[name]
-      }
-    }
-  })
-
-  it('does not send a job from yesterday during the next day’s valid window', () => {
-    const previous = { ...process.env }
-    try {
-      process.env.ENFORCE_SEND_WINDOW = 'true'
-      process.env.MESSAGE_TYPE = 'goodMorning'
-      process.env.NOTIFICATION_DATE = '2026-10-10'
-      expect(canSendNow(new Date('2026-10-10T23:45:00Z'))).toEqual(false)
-      process.env.NOTIFICATION_DATE = '2026-10-11'
-      expect(canSendNow(new Date('2026-10-10T23:45:00Z'))).toEqual(true)
-    } finally {
-      for (const name of ['MESSAGE_TYPE', 'ENFORCE_SEND_WINDOW', 'NOTIFICATION_DATE']) {
+      for (const name of names) {
         if (previous[name] === undefined) delete process.env[name]
         else process.env[name] = previous[name]
       }
@@ -96,9 +85,9 @@ describe('Beijing notification windows', () => {
   })
 })
 
-describe('preparing notifications before sparse GitHub triggers', () => {
-  it('prepares noon and bedtime messages at the actual early triggers that previously skipped them', () => {
-    for (const [timestamp, type] of [
+describe('preparing and recovering all notification types', () => {
+  it('prepares the missed types at the real early trigger times', () => {
+    const cases: [string, MessageType][] = [
       ['2026-10-10T04:09:57+08:00', 'goodMorning'],
       ['2026-10-10T02:45:51Z', 'goodAfternoon'],
       ['2026-10-11T02:11:43Z', 'goodAfternoon'],
@@ -107,58 +96,58 @@ describe('preparing notifications before sparse GitHub triggers', () => {
       ['2026-10-10T12:22:06Z', 'goodEvening'],
       ['2026-10-11T11:36:50Z', 'goodEvening'],
       ['2026-10-09T18:11:04+08:00', 'goodEvening'],
-    ]) {
+    ]
+    for (const [timestamp, type] of cases) {
       const now = new Date(timestamp)
       const notifications = getNotifications(now)
-      const item = notifications.find((n: { type: string }) => n.type === type)
+      const item = notifications.find(
+        (n) => n.type === type && Date.parse(n.scheduledAt) > now.getTime()
+      )
       expect(item).toBeDefined()
-      expect(Date.parse(item.scheduledAt)).toBeGreaterThan(now.getTime())
-      expect(isWithinSendWindow(type as MessageType, now)).toEqual(false)
+      expect(hasReachedSendTime(type, now, item?.date)).toEqual(false)
     }
   })
 
-  it('keeps all eligible message types when catch-up and advance preparation overlap', () => {
-    expect(
-      getNotifications(new Date('2026-10-11T05:35:44Z')).map((n: { type: string }) => n.type)
-    ).toEqual(['goodAfternoon', 'birthday'])
-    expect(
-      getNotifications(new Date('2026-10-11T11:36:50Z')).map((n: { type: string }) => n.type)
-    ).toEqual(['goodEvening'])
-    expect(getNotifications(new Date('2026-10-11T19:36:00Z'))).toEqual([])
-    expect(getNotifications(new Date('2026-10-11T15:00:00Z'))).toEqual([])
+  it('recovers every due type in a single late run rather than only selecting one', () => {
+    const notifications = getNotifications(new Date('2026-10-11T15:30:00Z'))
+    expect(notifications.map((n) => n.type)).toEqual([
+      'goodMorning',
+      'goodAfternoon',
+      'birthday',
+      'goodEvening',
+    ])
+    expect(notifications.map((n) => n.date)).toEqual(Array(4).fill('2026-10-11'))
+    expect(new Set(notifications.map((n) => n.id)).size).toEqual(4)
+    const overnight = getNotifications(new Date('2026-10-11T19:36:00Z'))
+    expect(overnight.map((n) => n.id)).toEqual(notifications.map((n) => n.id))
   })
 
-  it('covers all four messages using the real October 10 and 11 trigger times', () => {
+  it('keeps previous-day catch-up separate from today’s prepared message', () => {
+    const now = new Date('2026-10-12T01:30:00Z')
+    const noon = getNotifications(now).filter((n) => n.type === 'goodAfternoon')
+    expect(noon.map((n) => n.date)).toEqual(['2026-10-11', '2026-10-12'])
+    expect(hasReachedSendTime('goodAfternoon', now, noon[0].date)).toEqual(true)
+    expect(hasReachedSendTime('goodAfternoon', now, noon[1].date)).toEqual(false)
+  })
+
+  it('covers all four messages at their target times using the real October 10 and 11 triggers', () => {
     const days = [
       ['2026-10-10', ['04:09:57', '08:03:59', '10:45:51', '13:54:13', '17:32:17', '20:22:06']],
       ['2026-10-11', ['04:40:17', '07:53:21', '10:11:43', '13:35:44', '17:45:14', '19:36:50']],
     ] as const
     for (const [date, times] of days) {
-      const deliveries = new Map<string, string>()
+      const deliveries = new Map<string, number>()
       for (const time of times) {
         const now = new Date(`${date}T${time}+08:00`)
-        for (const item of getNotifications(now)) {
-          if (!deliveries.has(item.id)) {
-            const deliveryTime = Math.max(now.getTime(), Date.parse(item.scheduledAt))
-            expect(deliveryTime).toBeLessThan(Date.parse(item.expiresAt))
-            deliveries.set(item.id, new Date(deliveryTime).toISOString())
-          }
+        for (const item of getNotifications(now).filter((n) => n.date === date)) {
+          if (!deliveries.has(item.id))
+            deliveries.set(item.id, Math.max(now.getTime(), Date.parse(item.scheduledAt)))
         }
       }
       expect(deliveries.size).toEqual(4)
       for (const type of ['goodMorning', 'goodAfternoon', 'birthday', 'goodEvening'] as const) {
-        const expected = {
-          goodMorning: '23:45',
-          goodAfternoon: '02:58',
-          birthday: '06:58',
-          goodEvening: '13:58',
-        }[type]
-        const utcDate =
-          type === 'goodMorning'
-            ? new Date(Date.parse(`${date}T00:00:00Z`) - 86400000).toISOString().slice(0, 10)
-            : date
         expect(deliveries.get(`notification-${date}-${type}`)).toEqual(
-          `${utcDate}T${expected}:00.000Z`
+          Date.parse(getNotification(type, new Date(`${date}T12:00:00+08:00`)).scheduledAt)
         )
       }
     }
@@ -166,38 +155,33 @@ describe('preparing notifications before sparse GitHub triggers', () => {
 })
 
 describe('waiting on a prepared runner', () => {
-  it('becomes ready at the scheduled time and never signals an early send', async () => {
+  it('becomes ready at the scheduled time without sending early', async () => {
     const target = Date.parse('2026-10-11T13:58:00Z')
     let current = target - 90000
-    const result = await waitUntil(
-      new Date(target).toISOString(),
-      new Date(target + 60000).toISOString(),
-      {
-        now: () => current,
-        sleep: async (milliseconds: number) => {
-          expect(current).toBeLessThan(target)
-          expect(milliseconds).toBeLessThanOrEqual(30000)
-          current += milliseconds
-        },
-      }
-    )
+    const result = await waitUntil(new Date(target).toISOString(), {
+      now: () => current,
+      sleep: async (milliseconds: number) => {
+        expect(current).toBeLessThan(target)
+        expect(milliseconds).toBeLessThanOrEqual(30000)
+        current += milliseconds
+      },
+    })
     expect(result).toEqual(true)
     expect(current).toEqual(target)
   })
 
-  it('skips when a stalled runner resumes after the deadline', async () => {
+  it('permits catch-up even when the runner resumes hours late or after midnight', async () => {
     const target = Date.parse('2026-10-11T13:58:00Z')
     let current = target - 1000
-    const result = await waitUntil(
-      new Date(target).toISOString(),
-      new Date(target + 60000).toISOString(),
-      {
-        now: () => current,
-        sleep: async () => {
-          current = target + 60000
-        },
-      }
-    )
-    expect(result).toEqual(false)
+    const result = await waitUntil(new Date(target).toISOString(), {
+      now: () => current,
+      sleep: async () => {
+        current = target + 6 * 3600000
+      },
+    })
+    expect(result).toEqual(true)
+    expect(
+      await waitUntil(new Date(target).toISOString(), { now: () => target + 24 * 3600000 })
+    ).toEqual(true)
   })
 })

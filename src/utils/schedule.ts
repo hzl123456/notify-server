@@ -19,7 +19,11 @@ export function hasReachedSendTime(type: MessageType, now = new Date(), date?: s
 }
 
 export function shouldCheckSendTime(): boolean {
-  return process.env.GITHUB_EVENT_NAME === 'schedule' || process.env.ENFORCE_SCHEDULE === 'true' || process.env.ENFORCE_SEND_WINDOW === 'true'
+  return (
+    process.env.GITHUB_EVENT_NAME === 'schedule' ||
+    process.env.ENFORCE_SCHEDULE === 'true' ||
+    process.env.ENFORCE_SEND_WINDOW === 'true'
+  )
 }
 
 export function canSendNow(now = new Date()): boolean {

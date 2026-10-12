@@ -31,7 +31,11 @@ function getNotification(type, now = new Date(), notificationDate) {
   const local = getLocalTime(now)
   const date = notificationDate || local.date
   const offset = local.offset
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date) {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+    !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) ||
+    new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date
+  ) {
     throw new Error('计划日期无效')
   }
   const scheduledAt =
@@ -62,14 +66,6 @@ function getNotifications(now = new Date()) {
   return notifications.sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt))
 }
 
-// 保留仅检查当前可发送消息的接口，发送端也使用同一份窗口计算。
-function checkSchedule(now = new Date()) {
-  const current = getNotifications(now).find(
-    (item) => Date.parse(item.scheduledAt) <= now.getTime()
-  )
-  return current ? { type: current.type, date: current.date, id: current.id } : null
-}
-
 if (typeof require !== 'undefined' && require.main === module) {
   const notifications = getNotifications()
   if (process.env.GITHUB_OUTPUT) {
@@ -85,4 +81,4 @@ if (typeof require !== 'undefined' && require.main === module) {
   )
 }
 
-module.exports = { checkSchedule, getNotifications, getNotification }
+module.exports = { getNotifications, getNotification }

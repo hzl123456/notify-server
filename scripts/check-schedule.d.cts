@@ -13,4 +13,3 @@ export function getNotification(
   notificationDate?: string
 ): NotificationPlan
 export function getNotifications(now?: Date): NotificationPlan[]
-export function checkSchedule(now?: Date): Pick<NotificationPlan, 'type' | 'date' | 'id'> | null
