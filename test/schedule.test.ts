@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { canSendNow, hasReachedSendTime, MessageType } from '../src/utils/schedule'
-import { getNotification, getNotifications } from '../scripts/check-schedule.cjs'
+import { getNotification, getNotifications } from '../scripts/schedule.cjs'
 
 const { waitUntil } = require('../scripts/wait-until.cjs')
 

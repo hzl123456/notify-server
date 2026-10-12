@@ -1,5 +1,5 @@
 import config from '../../config/notifications.json'
-import { getNotification } from '../../scripts/check-schedule.cjs'
+import { getNotification } from '../../scripts/schedule.cjs'
 
 export const notificationSchedule = config.messages
 
