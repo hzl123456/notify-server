@@ -30,5 +30,5 @@ if (canSendNow()) {
     process.exitCode = 1
   })
 } else {
-  console.log(`跳过 ${process.env.MESSAGE_TYPE}：已超出北京时间发送窗口，不补发过期消息。`)
+  console.log(`跳过 ${process.env.MESSAGE_TYPE}：尚未到北京时间计划发送时间。`)
 }

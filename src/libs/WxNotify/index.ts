@@ -19,7 +19,7 @@ export function getDeliveredMessageCount() {
 // 主函数
 export async function wxNotify(config: any, dependencies = { getToken, postMsg, canSendNow }) {
   if (!dependencies.canSendNow()) {
-    console.log('跳过发送：已超出北京时间发送窗口。')
+    console.log('跳过发送：尚未到计划发送时间。')
     return false
   }
   try {
@@ -35,9 +35,9 @@ export async function wxNotify(config: any, dependencies = { getToken, postMsg, 
       ...config,
     }
     const option = { ...defaultConfig, ...config }
-    // 获取内容、token 的过程中也可能越过窗口，再次检查，避免过期消息继续发送。
+    // 发送前再次确认当前计划已经到时。
     if (!dependencies.canSendNow()) {
-      console.log('跳过发送：已超出北京时间发送窗口。')
+      console.log('跳过发送：尚未到计划发送时间。')
       return false
     }
     const res = await dependencies.postMsg(accessToken, option)

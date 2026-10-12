@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { getDeliveredMessageCount, wxNotify } from '../src/libs/WxNotify'
 
 describe('notification delivery', () => {
-  it('does not contact WeChat outside the send window', async () => {
+  it('does not contact WeChat before the planned time', async () => {
     const getToken = vi.fn(async () => 'test-token')
     const postMsg = vi.fn(async () => ({ errcode: 0 }))
     const result = await wxNotify(
@@ -18,7 +18,7 @@ describe('notification delivery', () => {
     expect(postMsg).toHaveBeenCalledTimes(0)
   })
 
-  it('does not send when fetching the token crosses the deadline', async () => {
+  it('rechecks send eligibility after fetching the token', async () => {
     let inWindow = true
     const postMsg = vi.fn(async () => ({ errcode: 0 }))
     const result = await wxNotify(

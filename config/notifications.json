@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "sendWindowMinutes": 30,
+  "prepareAheadMinutes": 240,
   "messages": {
     "goodMorning": { "hour": 7, "minute": 45 },
     "goodAfternoon": { "hour": 10, "minute": 58 },
