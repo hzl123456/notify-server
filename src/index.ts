@@ -1,8 +1,9 @@
 import dotenv from 'dotenv'
 import { appendFileSync, writeFileSync } from 'fs'
 import LoveMsg from './libs/LoveMsg'
-import { getDeliveredMessageCount } from './libs/WxNotify'
-import { canSendNow, notificationTimeZone } from './utils/schedule'
+import { getDeliveredMessageCount, getFirstDeliveredAt } from './libs/WxNotify'
+import { canSendNow, notificationTimeZone, MessageType } from './utils/schedule'
+import { getDeliveryId } from '../scripts/schedule.cjs'
 dotenv.config()
 process.env.TZ = notificationTimeZone
 
@@ -16,11 +17,20 @@ if (canSendNow()) {
       }
     } finally {
       if (getDeliveredMessageCount() > 0) {
+        const sentAt = getFirstDeliveredAt() as Date
+        const deliveryId = getDeliveryId(process.env.MESSAGE_TYPE as MessageType, sentAt)
         if (process.env.NOTIFICATION_MARKER) {
-          writeFileSync(process.env.NOTIFICATION_MARKER, new Date().toISOString())
+          writeFileSync(
+            process.env.NOTIFICATION_MARKER,
+            JSON.stringify({
+              sentAt: sentAt.toISOString(),
+              deliveryId,
+              plannedDate: process.env.NOTIFICATION_DATE,
+            })
+          )
         }
         if (process.env.GITHUB_OUTPUT) {
-          appendFileSync(process.env.GITHUB_OUTPUT, 'sent=true\n')
+          appendFileSync(process.env.GITHUB_OUTPUT, `sent=true\ndelivery_id=${deliveryId}\n`)
         }
       }
     }

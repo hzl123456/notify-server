@@ -11,9 +11,14 @@ dotenv.config()
 const { WX_COMPANY_ID, WX_APP_ID, WX_APP_SECRET } = process.env
 
 let deliveredMessageCount = 0
+let firstDeliveredAt: Date | undefined
 
 export function getDeliveredMessageCount() {
   return deliveredMessageCount
+}
+
+export function getFirstDeliveredAt() {
+  return firstDeliveredAt
 }
 
 // 主函数
@@ -44,6 +49,7 @@ export async function wxNotify(config: any, dependencies = { getToken, postMsg, 
     if (res.errcode !== 0) {
       throw new Error(`企业微信返回错误码 ${res.errcode}`)
     }
+    if (deliveredMessageCount === 0) firstDeliveredAt = new Date()
     deliveredMessageCount += 1
     console.log('wx:信息发送成功！', res)
     return true

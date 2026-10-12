@@ -47,22 +47,45 @@ function getNotification(type, now = new Date(), notificationDate) {
   }
 }
 
-// 一次触发可准备多种消息；提前接到的任务由 runner 等待到发送时间。
+// 只安排今天的计划；提前启动的 runner 等待到时，不自动重建历史积压。
 function getNotifications(now = new Date()) {
   const timestamp = now.getTime()
   const notifications = []
   for (const type of Object.keys(config.messages)) {
     const today = getNotification(type, now)
     const target = Date.parse(today.scheduledAt)
-    if (target <= timestamp) {
-      notifications.push(today)
-    } else {
-      // 跨过午夜也保留最近一次到期的消息，由发送记录判断是否需要补发。
-      notifications.push(getNotification(type, new Date(timestamp - 86400000)))
-      if (target - timestamp <= config.prepareAheadMinutes * 60000) notifications.push(today)
-    }
+    if (target - timestamp <= config.prepareAheadMinutes * 60000) notifications.push(today)
   }
   return notifications.sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt))
 }
 
-module.exports = { getNotifications, getNotification }
+function getDeliveryDate(now = new Date()) {
+  return getLocalTime(now).date
+}
+
+function getDeliveryId(type, now = new Date()) {
+  if (!config.messages[type]) throw new Error(`未知消息类型：${type}`)
+  return `delivery-${getDeliveryDate(now)}-${type}`
+}
+
+function wasDeliveredToday(artifacts, type, now = new Date()) {
+  const date = getDeliveryDate(now)
+  const id = getDeliveryId(type, now)
+  return artifacts.some((artifact) => {
+    if (artifact.expired) return false
+    // 新记录以实际发送日期命名，上传跨午夜也不改变归属。
+    if (artifact.name === id) return true
+    // 兼容旧记录：历史计划可能在今天补发，以记录创建时间识别。
+    if (!new RegExp(`^notification-\\d{4}-\\d{2}-\\d{2}-${type}$`).test(artifact.name)) return false
+    const createdAt = new Date(artifact.created_at)
+    return Number.isFinite(createdAt.getTime()) && getDeliveryDate(createdAt) === date
+  })
+}
+
+module.exports = {
+  getNotifications,
+  getNotification,
+  getDeliveryDate,
+  getDeliveryId,
+  wasDeliveredToday,
+}

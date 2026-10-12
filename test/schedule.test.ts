@@ -26,24 +26,23 @@ describe('Beijing notification dates and times', () => {
     }
   })
 
-  it('allows noon and birthday messages in the evening, and yesterday’s story at 03:36', () => {
+  it('allows late sends, including an already prepared story after midnight', () => {
     const evening = new Date('2026-10-11T15:30:00Z')
     expect(hasReachedSendTime('goodAfternoon', evening, '2026-10-11')).toEqual(true)
     expect(hasReachedSendTime('birthday', evening, '2026-10-11')).toEqual(true)
     expect(hasReachedSendTime('goodEvening', evening, '2026-10-11')).toEqual(true)
     const late = new Date('2026-10-11T19:36:00Z')
-    const story = getNotifications(late).find((n) => n.type === 'goodEvening')
-    expect(story?.date).toEqual('2026-10-11')
-    expect(hasReachedSendTime('goodEvening', late, story?.date)).toEqual(true)
+    const story = getNotification('goodEvening', late, '2026-10-11')
+    expect(hasReachedSendTime('goodEvening', late, story.date)).toEqual(true)
+    // 新触发不会重新创建昨天的任务。
+    expect(getNotifications(late)).toEqual([])
   })
 
   it('keeps deduplication keys tied to the planned Beijing date across midnight', () => {
     const before = getNotifications(new Date('2026-10-11T15:30:00Z')).find(
       (n) => n.type === 'goodEvening'
     )
-    const after = getNotifications(new Date('2026-10-11T19:36:00Z')).find(
-      (n) => n.type === 'goodEvening'
-    )
+    const after = getNotification('goodEvening', new Date('2026-10-11T19:36:00Z'), '2026-10-11')
     expect(before?.id).toEqual('notification-2026-10-11-goodEvening')
     expect(after?.id).toEqual(before?.id)
     expect(getNotification('goodEvening', new Date('2026-10-12T13:58:00Z')).id).toEqual(
@@ -118,16 +117,19 @@ describe('preparing and recovering all notification types', () => {
     ])
     expect(notifications.map((n) => n.date)).toEqual(Array(4).fill('2026-10-11'))
     expect(new Set(notifications.map((n) => n.id)).size).toEqual(4)
-    const overnight = getNotifications(new Date('2026-10-11T19:36:00Z'))
-    expect(overnight.map((n) => n.id)).toEqual(notifications.map((n) => n.id))
+    expect(getNotifications(new Date('2026-10-11T19:36:00Z'))).toEqual([])
   })
 
-  it('keeps previous-day catch-up separate from today’s prepared message', () => {
-    const now = new Date('2026-10-12T01:30:00Z')
-    const noon = getNotifications(now).filter((n) => n.type === 'goodAfternoon')
-    expect(noon.map((n) => n.date)).toEqual(['2026-10-11', '2026-10-12'])
-    expect(hasReachedSendTime('goodAfternoon', now, noon[0].date)).toEqual(true)
-    expect(hasReachedSendTime('goodAfternoon', now, noon[1].date)).toEqual(false)
+  it('does not replay yesterday’s noon, birthday or bedtime at the reported 10:39 trigger', () => {
+    const now = new Date('2026-10-12T02:39:09Z')
+    const notifications = getNotifications(now)
+    expect(notifications.map((n) => n.type)).toEqual(['goodMorning', 'goodAfternoon'])
+    expect(notifications.map((n) => n.date)).toEqual(['2026-10-12', '2026-10-12'])
+    expect(hasReachedSendTime('goodAfternoon', now, notifications[1].date)).toEqual(false)
+    expect(
+      getNotifications(new Date('2026-10-12T02:58:00Z')).filter((n) => n.type === 'goodAfternoon')
+        .length
+    ).toEqual(1)
   })
 
   it('covers all four messages at their target times using the real October 10 and 11 triggers', () => {

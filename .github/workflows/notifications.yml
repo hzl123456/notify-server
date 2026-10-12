@@ -8,7 +8,7 @@ on:
         type: boolean
         default: false
   schedule:
-    # 全天每 10 分钟尝试触发；处理最近到期未发送的消息，并提前准备未来消息。
+    # 全天每 10 分钟尝试触发；补发当天到期消息，并提前准备未来消息。
     # 避开整点，并在 07:45、10:58、14:58、21:58 增加一次检查。
     - cron: '3,13,23,33,43,53 * * * *'
     - cron: '45 23 * * *'
@@ -60,9 +60,9 @@ jobs:
       fail-fast: false
       matrix:
         notification: ${{ fromJSON(needs.plan.outputs.notifications) }}
-    # 同一天、同一种消息串行；等待晚安不会阻塞其他种类的消息。
+    # 同一种消息串行，包括跨日延迟的旧任务，防止实际发送日期重叠。
     concurrency:
-      group: scheduled-${{ matrix.notification.id }}
+      group: notification-send-${{ matrix.notification.type }}
       cancel-in-progress: false
     env:
       TZ: Asia/Shanghai
@@ -70,14 +70,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check delivery record for the planned date
+      - name: Check today's actual delivery record
         id: delivery
         env:
           GH_TOKEN: ${{ github.token }}
-          NOTIFICATION_ID: ${{ matrix.notification.id }}
-        run: |
-          delivered=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=${NOTIFICATION_ID}" --jq '.artifacts | any(.expired == false)')
-          echo "delivered=$delivered" >> "$GITHUB_OUTPUT"
+          MESSAGE_TYPE: ${{ matrix.notification.type }}
+        run: node scripts/check-delivery.cjs
 
       - name: Install pnpm
         if: steps.delivery.outputs.delivered == 'false'
@@ -108,10 +106,8 @@ jobs:
         id: delivery_at_send
         env:
           GH_TOKEN: ${{ github.token }}
-          NOTIFICATION_ID: ${{ matrix.notification.id }}
-        run: |
-          delivered=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=${NOTIFICATION_ID}" --jq '.artifacts | any(.expired == false)')
-          echo "delivered=$delivered" >> "$GITHUB_OUTPUT"
+          MESSAGE_TYPE: ${{ matrix.notification.type }}
+        run: node scripts/check-delivery.cjs
 
       - name: Send notification
         if: steps.window.outputs.ready == 'true' && steps.delivery_at_send.outputs.delivered == 'false'
@@ -128,11 +124,11 @@ jobs:
           NOTIFICATION_MARKER: .notification-sent
 
       # 即使后续内容请求失败，已发送的消息也要记录，避免下一次检查重复发送。
-      - name: Save delivery record for the planned date
+      - name: Save record for the actual send date
         if: always() && steps.send.outputs.sent == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.notification.id }}
+          name: ${{ steps.send.outputs.delivery_id }}
           path: .notification-sent
           include-hidden-files: true
           if-no-files-found: error
